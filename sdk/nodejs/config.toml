@@ -1,0 +1,3 @@
+title = "nodejs"
+url = "https://npm.taobao.org/mirrors/node/"
+version = "${version}"
