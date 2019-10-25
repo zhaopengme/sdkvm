@@ -30,7 +30,8 @@ func (this *NodeSdk) Versions() {
 	if e != nil {
 		mlog.Fatal(e)
 	}
-	for _,v := range versions.ToArray(){
-		print(v)
+	for _,version := range versions.ToArray(){
+		v:=version.(map[string]interface{})
+		mlog.Printf("%s",v["version"])
 	}
 }
