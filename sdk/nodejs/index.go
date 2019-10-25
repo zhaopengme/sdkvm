@@ -1,9 +1,11 @@
 package nodejs
 
 import (
+	"fmt"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/zhaopengme/sdkvm/mlog"
 	"github.com/zhaopengme/sdkvm/sdk"
 	"github.com/zhaopengme/sdkvm/util"
@@ -23,6 +25,17 @@ func (this *NodeSdk) Init() {
 	this.host = host
 }
 
+func (this *NodeSdk) Install(version string) {
+	this.Init()
+	filename := fmt.Sprintf("node-%s-darwin-x64.tar.gz", version)
+	url := fmt.Sprintf("%s/%s/%s", this.host, version, filename)
+	bytes := ghttp.GetBytes(url)
+	e := gfile.PutBytes("/tmp/"+filename, bytes)
+	if e != nil {
+		mlog.Fatal(e)
+	}
+}
+
 func (this *NodeSdk) Versions() {
 	this.Init()
 	content := ghttp.GetContent(this.host + "/index.json")
@@ -30,8 +43,8 @@ func (this *NodeSdk) Versions() {
 	if e != nil {
 		mlog.Fatal(e)
 	}
-	for _,version := range versions.ToArray(){
-		v:=version.(map[string]interface{})
-		mlog.Printf("%s",v["version"])
+	for _, version := range versions.ToArray() {
+		v := version.(map[string]interface{})
+		mlog.Printf("%s", v["version"])
 	}
 }
