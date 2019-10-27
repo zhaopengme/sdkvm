@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	gPROXY_CHECK_TIMEOUT = time.Second
+	gPROXY_CHECK_TIMEOUT = 5 * time.Second
 )
 
 func CheckHostSpeed(urls map[string]string) string {

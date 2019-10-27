@@ -2,8 +2,9 @@ package sdk
 
 type Sdk interface {
 	Versions()
-	CurrentVersions()
+	LocalVersions()
 	UseVersion(version string)
 	Install(version string)
 	Uninstall(version string)
+	SetEnv()
 }
