@@ -5,8 +5,9 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gview"
 	"github.com/zhaopengme/sdkvm/mlog"
 	"github.com/zhaopengme/sdkvm/sdk"
 	"github.com/zhaopengme/sdkvm/util"
@@ -33,12 +34,12 @@ func (this *NodeSdk) Install(version string) {
 	filename := fmt.Sprintf("node-%s-darwin-x64.tar.gz", version)
 	url := fmt.Sprintf("%s/%s/%s", this.host, version, filename)
 	bytes := ghttp.GetBytes(url)
-	tmpFile := "/tmp/" + filename
+	tmpFile := gfile.Join(gfile.TempDir(), filename)
 	e := gfile.PutBytes(tmpFile, bytes)
 	if e != nil {
 		mlog.Fatal(e)
 	}
-	e = gziputil.Decompress(tmpFile, "tmp")
+	e = gziputil.Decompress(tmpFile, gfile.TempDir())
 	if e != nil {
 		mlog.Fatal(e)
 	}
@@ -52,7 +53,7 @@ func (this *NodeSdk) Install(version string) {
 	if gfile.Exists(sdkHome) {
 		gfile.Remove(sdkHome)
 	}
-	e = gfile.Move(filepath.Join("/tmp/", tmpSdkDir), sdkHome)
+	e = gfile.Move(filepath.Join(gfile.TempDir(), tmpSdkDir), sdkHome)
 	if e != nil {
 		mlog.Fatal(e)
 	}
@@ -94,7 +95,41 @@ func (this *NodeSdk) UseVersion(version string) {
 	gfile.Move(sdkHome, sdkHome+"_default")
 }
 
-func (this *NodeSdk) SetEnv() {
-	this.Init()
-	genv.Set("sdkvm","hello")
+func (this *NodeSdk) GenerateEnv(version string) {
+	home, _ := gfile.Home()
+	sdkHome := filepath.Join(home, ".sdkvm", "node", version)
+	sdkShell := filepath.Join(home, ".sdkvm", "env.sh")
+
+	content, e := gview.ParseContent(`#!/bin/sh
+export PATH="{{.sdkHome}}/bin:$PATH"
+	`, g.Map{"sdkHome": sdkHome})
+	if e != nil {
+		mlog.Fatal(e)
+	}
+	e = gfile.PutContents(sdkShell, content)
+	if e != nil {
+		mlog.Fatal(e)
+	}
+}
+
+func (this *NodeSdk) RunCmd() {
+	command := gcmd.GetArg(2)
+	switch command {
+	case "ls-remote":
+		this.Versions()
+	case "ls":
+		this.LocalVersions()
+	case "use":
+		version := gcmd.GetArg(3)
+		//this.UseVersion(version)
+		this.GenerateEnv(version)
+	case "install":
+		version := gcmd.GetArg(3)
+		this.Install(version)
+	case "uninstall":
+		version := gcmd.GetArg(3)
+		this.Uninstall(version)
+	default:
+		fmt.Println("not support")
+	}
 }

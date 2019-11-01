@@ -47,7 +47,7 @@ func main() {
 		fmt.Println(verContent)
 	case "node":
 		sdk := &nodejs.NodeSdk{}
-		sdk.SetEnv()
+		sdk.RunCmd()
 	default:
 		fmt.Println(helpContent)
 	}
