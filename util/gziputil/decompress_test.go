@@ -1,7 +1,11 @@
 package gziputil
 
-import "testing"
+import (
+	"github.com/gogf/gf/os/gfile"
+	"testing"
+)
 
 func TestDecompress(t *testing.T) {
-	Decompress("/tmp/node-v9.9.0-darwin-x64.tar.gz", "/tmp/")
+	e :=Decompress("/var/folders/d6/ttzx_qyd6y35bb9nx9nrdmvc0000gp/T/node-v13.0.1-darwin-x64.tar.gz", gfile.TempDir())
+	print(e)
 }

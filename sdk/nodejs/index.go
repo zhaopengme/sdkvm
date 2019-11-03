@@ -8,11 +8,13 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/zhaopengme/sdkvm/mlog"
 	"github.com/zhaopengme/sdkvm/sdk"
 	"github.com/zhaopengme/sdkvm/util"
 	"github.com/zhaopengme/sdkvm/util/gziputil"
 	"path/filepath"
+	"runtime"
 )
 
 type NodeSdk struct {
@@ -20,6 +22,23 @@ type NodeSdk struct {
 	host string
 }
 
+func (this *NodeSdk) getNodeFileName(version string) string {
+	osname := ""
+	osarch := "x32"
+	if gstr.Contains(runtime.GOARCH, "64") {
+		osarch = "x64"
+	}
+	switch runtime.GOOS {
+	case "windows":
+		osname = "win"
+	case "darwin":
+		osname = "darwin"
+	default:
+		osname = "linux"
+	}
+	filename := fmt.Sprintf("node-%s-%s-%s", version, osname, osarch)
+	return filename
+}
 func (this *NodeSdk) Init() {
 	urls := g.MapStrStr{"host": "https://npm.taobao.org/mirrors/node", "chinaHost": "https://nodejs.org/dist"}
 	host := util.CheckHostSpeed(urls)
@@ -31,10 +50,12 @@ func (this *NodeSdk) Init() {
 
 func (this *NodeSdk) Install(version string) {
 	this.Init()
-	filename := fmt.Sprintf("node-%s-darwin-x64.tar.gz", version)
-	url := fmt.Sprintf("%s/%s/%s", this.host, version, filename)
+
+	filename := this.getNodeFileName(version)
+	tarFilename := this.getNodeFileName(version) + ".tar.gz"
+	url := fmt.Sprintf("%s/%s/%s", this.host, version, tarFilename)
 	bytes := ghttp.GetBytes(url)
-	tmpFile := gfile.Join(gfile.TempDir(), filename)
+	tmpFile := gfile.Abs(gfile.Join(gfile.TempDir(), tarFilename))
 	e := gfile.PutBytes(tmpFile, bytes)
 	if e != nil {
 		mlog.Fatal(e)
@@ -43,7 +64,6 @@ func (this *NodeSdk) Install(version string) {
 	if e != nil {
 		mlog.Fatal(e)
 	}
-	tmpSdkDir := fmt.Sprintf("node-%s-darwin-x64", version)
 	home, _ := gfile.Home()
 	sdkHome := filepath.Join(home, ".sdkvm", "node", version)
 	e = gfile.Mkdir(sdkHome)
@@ -53,7 +73,7 @@ func (this *NodeSdk) Install(version string) {
 	if gfile.Exists(sdkHome) {
 		gfile.Remove(sdkHome)
 	}
-	e = gfile.Move(filepath.Join(gfile.TempDir(), tmpSdkDir), sdkHome)
+	e = gfile.Move(filepath.Join(gfile.TempDir(), filename), sdkHome)
 	if e != nil {
 		mlog.Fatal(e)
 	}
